@@ -1,1001 +1,866 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>减肥记录</title>
-    <meta name="version" content="2.0">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 16px;
-            padding-bottom: 80px;
-        }
-        
-        .header {
-            text-align: center;
-            color: white;
-            padding: 20px 0 30px;
-        }
-        
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-        
-        .header .subtitle {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        /* 页面容器 */
-        .page {
-            display: none;
-        }
-        
-        .page.active {
-            display: block;
-        }
-        
-        /* 目标卡片 */
-        .goal-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .goal-card h2 {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 16px;
-        }
-        
-        .goal-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            text-align: center;
-        }
-        
-        .goal-stat .value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .goal-stat .label {
-            font-size: 12px;
-            color: #999;
-            margin-top: 4px;
-        }
-        
-        .goal-stat.highlight .value {
-            color: #667eea;
-        }
-        
-        /* 进度条 */
-        .progress-section {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .progress-header h3 {
-            font-size: 16px;
-            color: #333;
-        }
-        
-        .progress-header .progress-value {
-            font-size: 14px;
-            color: #667eea;
-            font-weight: bold;
-        }
-        
-        .progress-bar {
-            height: 12px;
-            background: #eee;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            border-radius: 6px;
-            transition: width 0.5s ease;
-        }
-        
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #999;
-        }
-        
-        /* 日期卡片 */
-        .day-card {
-            background: white;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .day-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .day-date {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        
-        .day-week {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .day-weight {
-            text-align: right;
-        }
-        
-        .day-weight .value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .day-weight .unit {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-        
-        .day-content {
-            padding: 16px 20px;
-        }
-        
-        /* 餐食区块 */
-        .meal-section {
-            margin-bottom: 16px;
-        }
-        
-        .meal-section:last-child {
-            margin-bottom: 0;
-        }
-        
-        .meal-title {
-            font-size: 13px;
-            color: #999;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .meal-title .icon {
-            width: 16px;
-            text-align: center;
-        }
-        
-        .meal-content {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 12px 16px;
-        }
-        
-        .meal-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px dashed #eee;
-        }
-        
-        .meal-item:last-child {
-            border-bottom: none;
-        }
-        
-        .meal-item .name {
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .meal-item .calories {
-            font-size: 14px;
-            color: #667eea;
-            font-weight: 500;
-        }
-        
-        /* 运动区块 */
-        .exercise-section {
-            background: #e8f5e9;
-            border-radius: 12px;
-            padding: 12px 16px;
-            margin-top: 12px;
-        }
-        
-        .exercise-title {
-            font-size: 13px;
-            color: #4caf50;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .exercise-detail {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .exercise-name {
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .exercise-calories {
-            font-size: 14px;
-            color: #4caf50;
-            font-weight: 500;
-        }
-        
-        /* 今日汇总 */
-        .day-summary {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #eee;
-        }
-        
-        .summary-item {
-            text-align: center;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 12px;
-        }
-        
-        .summary-item .value {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .summary-item .label {
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-        }
-        
-        .summary-item.warning .value {
-            color: #ff9800;
-        }
-        
-        .summary-item.success .value {
-            color: #4caf50;
-        }
-        
-        /* 底部导航 */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-        }
-        
-        .nav-item {
-            text-align: center;
-            color: #999;
-            font-size: 12px;
-            cursor: pointer;
-            padding: 4px 16px;
-        }
-        
-        .nav-item.active {
-            color: #667eea;
-        }
-        
-        .nav-item .icon {
-            font-size: 20px;
-            margin-bottom: 4px;
-        }
-        
-        /* 趋势页面 */
-        .chart-card {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .chart-card h3 {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 16px;
-        }
-        
-        .chart-container {
-            position: relative;
-            height: 200px;
-        }
-        
-        /* 目标页面 */
-        .target-section {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .target-section h3 {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 16px;
-        }
-        
-        .target-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .target-item:last-child {
-            border-bottom: none;
-        }
-        
-        .target-item .label {
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .target-item .value {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .target-item .status {
-            font-size: 12px;
-            padding: 4px 12px;
-            border-radius: 12px;
-        }
-        
-        .target-item .status.good {
-            background: #e8f5e9;
-            color: #4caf50;
-        }
-        
-        .target-item .status.warning {
-            background: #fff3e0;
-            color: #ff9800;
-        }
-        
-        .target-item .status.bad {
-            background: #ffebee;
-            color: #f44336;
-        }
-        
-        .advice-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-        
-        .advice-card h3 {
-            font-size: 16px;
-            margin-bottom: 12px;
-        }
-        
-        .advice-card p {
-            font-size: 14px;
-            line-height: 1.6;
-            opacity: 0.95;
-        }
-        
-        .milestone-section {
-            background: white;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        
-        .milestone-section h3 {
-            font-size: 16px;
-            color: #333;
-            margin-bottom: 16px;
-        }
-        
-        .milestone {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 0;
-        }
-        
-        .milestone .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ddd;
-        }
-        
-        .milestone .dot.completed {
-            background: #4caf50;
-        }
-        
-        .milestone .dot.current {
-            background: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3);
-        }
-        
-        .milestone .info {
-            flex: 1;
-        }
-        
-        .milestone .title {
-            font-size: 14px;
-            color: #333;
-        }
-        
-        .milestone .desc {
-            font-size: 12px;
-            color: #999;
-            margin-top: 2px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>减肥记录看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-start: #5f72ff;
+      --bg-end: #9b6dff;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-sub: #6b7280;
+      --text-soft: #9ca3af;
+      --primary: #4f46e5;
+      --primary-soft: rgba(79, 70, 229, 0.12);
+      --success: #16a34a;
+      --warn: #f59e0b;
+      --danger: #dc2626;
+      --border: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      color: var(--text-main);
+      padding: 16px;
+      padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    }
+
+    .app {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .header {
+      color: #fff;
+      text-align: center;
+      margin-bottom: 16px;
+      padding: 12px 8px 4px;
+    }
+
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 13px;
+      opacity: 0.92;
+    }
+
+    .page {
+      display: none;
+      gap: 12px;
+      flex-direction: column;
+    }
+
+    .page.active {
+      display: flex;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      padding: 14px;
+    }
+
+    .card h2 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-item {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .stat-item .v {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+
+    .stat-item .k {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+
+    .progress-wrap {
+      margin-top: 10px;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .progress-row strong {
+      color: var(--primary);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      border-radius: 999px;
+    }
+
+    .day-card {
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .day-header {
+      background: linear-gradient(135deg, #5666f3, #7d4ff6);
+      color: #fff;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .day-header .date {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .day-header .week {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .day-header .weight {
+      text-align: right;
+    }
+
+    .day-header .weight .v {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .day-header .weight .u {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .day-body {
+      padding: 12px 14px 14px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: var(--text-sub);
+      margin: 10px 0 6px;
+    }
+
+    .list {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .item {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 0;
+      border-bottom: 1px dashed #e5e7eb;
+      font-size: 14px;
+    }
+
+    .item:last-child {
+      border-bottom: none;
+    }
+
+    .item .name {
+      color: #111827;
+    }
+
+    .item .cal {
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .exercise {
+      margin-top: 10px;
+      background: #ecfdf5;
+      border: 1px solid #dcfce7;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+
+    .exercise .cal {
+      color: var(--success);
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .summary-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .summary-box {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 10px;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .summary-box .v {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .summary-box .k {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-soft);
+    }
+
+    .summary-box.success .v {
+      color: var(--success);
+    }
+
+    .summary-box.warn .v {
+      color: var(--warn);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
+
+    .table-like {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .table-like tr + tr td {
+      border-top: 1px solid var(--border);
+    }
+
+    .table-like td {
+      padding: 10px 0;
+    }
+
+    .table-like td:last-child {
+      text-align: right;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .status-good {
+      color: var(--success) !important;
+    }
+
+    .status-warn {
+      color: var(--warn) !important;
+    }
+
+    .timeline {
+      margin-top: 6px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 10px;
+      padding: 8px 0;
+      align-items: flex-start;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 6px;
+      background: #d1d5db;
+      flex: 0 0 auto;
+    }
+
+    .dot.done {
+      background: var(--success);
+    }
+
+    .dot.current {
+      background: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-soft);
+    }
+
+    .timeline-item .t1 {
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .timeline-item .t2 {
+      font-size: 12px;
+      color: var(--text-soft);
+      margin-top: 2px;
+    }
+
+    .advice {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 99999;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.08);
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .tab-btn {
+      border: none;
+      outline: none;
+      background: transparent;
+      color: #6b7280;
+      border-radius: 10px;
+      padding: 8px 4px;
+      font-size: 12px;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    .tab-btn .tab-title {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .tab-btn.active {
+      background: #eef2ff;
+      color: var(--primary);
+    }
+
+    .fallback-note {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 8px;
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      body {
+        padding: 24px;
+        padding-bottom: 110px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>减肥记录</h1>
-        <div class="subtitle">坚持就是胜利</div>
-    </div>
-    
-    <!-- 记录页面 -->
-    <div id="page-record" class="page active">
-        <!-- 目标卡片 -->
-        <div class="goal-card">
-            <h2>我的目标</h2>
-            <div class="goal-stats">
-                <div class="goal-stat">
-                    <div class="value">70.2</div>
-                    <div class="label">起始体重(kg)</div>
-                </div>
-                <div class="goal-stat highlight">
-                    <div class="value">68.0</div>
-                    <div class="label">目标体重(kg)</div>
-                </div>
-                <div class="goal-stat">
-                    <div class="value">2.2</div>
-                    <div class="label">目标减重(kg)</div>
-                </div>
-            </div>
+  <div class="app">
+    <header class="header">
+      <h1>减肥记录</h1>
+      <p>清晰记录每日体重、饮食与目标进度</p>
+    </header>
+
+    <section id="page-record" class="page active">
+      <article class="card">
+        <h2>目标概览</h2>
+        <div class="stats-grid" id="goalOverviewStats"></div>
+        <div class="progress-wrap">
+          <div class="progress-row">
+            <span>减重进度</span>
+            <strong id="progressLabel">0%</strong>
+          </div>
+          <div class="progress-track">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+          </div>
         </div>
-        
-        <!-- 进度条 -->
-        <div class="progress-section">
-            <div class="progress-header">
-                <h3>减重进度</h3>
-                <div class="progress-value">已完成 82%</div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 82%"></div>
-            </div>
-            <div class="progress-info">
-                <span>已减 1.9kg</span>
-                <span>目标 2.2kg</span>
-            </div>
+      </article>
+
+      <div id="recordList"></div>
+    </section>
+
+    <section id="page-trend" class="page">
+      <article class="card">
+        <h2>体重趋势线</h2>
+        <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
+        <div id="weightFallback" class="fallback-note">图表库加载失败，当前无法显示趋势图。</div>
+      </article>
+
+      <article class="card">
+        <h2>净摄入能量趋势线</h2>
+        <div class="chart-wrap"><canvas id="netChart"></canvas></div>
+        <div id="netFallback" class="fallback-note">图表库加载失败，当前无法显示趋势图。</div>
+      </article>
+
+      <article class="card">
+        <h2>统计摘要</h2>
+        <div class="stats-grid" id="trendStats"></div>
+      </article>
+    </section>
+
+    <section id="page-goal" class="page">
+      <article class="card">
+        <h2>目标参数</h2>
+        <table class="table-like" id="goalTable"></table>
+      </article>
+
+      <article class="card">
+        <h2>里程碑</h2>
+        <div class="timeline" id="timeline"></div>
+      </article>
+
+      <article class="advice" id="advice"></article>
+    </section>
+  </div>
+
+  <nav class="bottom-nav" aria-label="底部导航">
+    <button class="tab-btn active" data-page="record" type="button">
+      <span class="tab-title">记录</span>
+      <span>每日明细</span>
+    </button>
+    <button class="tab-btn" data-page="trend" type="button">
+      <span class="tab-title">趋势</span>
+      <span>变化曲线</span>
+    </button>
+    <button class="tab-btn" data-page="goal" type="button">
+      <span class="tab-title">目标</span>
+      <span>计划进度</span>
+    </button>
+  </nav>
+
+  <script>
+    const profile = {
+      startWeight: 70.2,
+      targetWeight: 68.0,
+      dailyNetTarget: 1500,
+      bmi: 22.9
+    };
+
+    const records = [
+      {
+        date: "3月14日",
+        week: "星期六",
+        weight: 68.5,
+        note: "",
+        meals: {
+          零食: [{ name: "白色恋人饼干 1片", kcal: 57 }]
+        },
+        exercise: null,
+        intake: 57,
+        net: 57
+      },
+      {
+        date: "3月13日",
+        week: "星期五",
+        weight: 68.3,
+        note: "早上空腹",
+        meals: {
+          午餐: [{ name: "赛百味6英寸牛肉三明治", kcal: 290 }],
+          晚餐: [
+            { name: "油泼面", kcal: 650 },
+            { name: "鸡蛋醪糟", kcal: 150 }
+          ]
+        },
+        exercise: null,
+        intake: 1090,
+        net: 1090
+      },
+      {
+        date: "3月12日",
+        week: "星期四",
+        weight: 70.2,
+        note: "",
+        meals: {
+          午餐: [{ name: "赛百味6英寸牛肉三明治", kcal: 290 }],
+          晚餐: [
+            { name: "麦辣鸡翅 2份", kcal: 380 },
+            { name: "中薯条 1份", kcal: 340 },
+            { name: "中杯可乐", kcal: 210 }
+          ],
+          零食: [
+            { name: "白色恋人饼干 1块", kcal: 57 },
+            { name: "鹌鹑蛋 5个", kcal: 70 }
+          ]
+        },
+        exercise: null,
+        intake: 1347,
+        net: 1347
+      },
+      {
+        date: "3月11日",
+        week: "星期三",
+        weight: null,
+        note: "",
+        meals: {
+          午餐: [
+            { name: "热米皮 1份", kcal: 400 },
+            { name: "肉夹馍 1个", kcal: 350 },
+            { name: "可乐 150ml", kcal: 70 }
+          ],
+          晚餐: [
+            { name: "麦辣鸡翅 2份", kcal: 380 },
+            { name: "中薯条 1份", kcal: 340 },
+            { name: "可乐 1/3杯", kcal: 70 }
+          ]
+        },
+        exercise: { name: "室内单车 40分钟", kcal: 327 },
+        intake: 1610,
+        net: 1283
+      }
+    ];
+
+    const order = ["早餐", "午餐", "晚餐", "零食"];
+
+    function formatNumber(v) {
+      return Number(v).toLocaleString("zh-CN");
+    }
+
+    function weightLabel(weight, note) {
+      if (weight === null || weight === undefined) return "-- kg";
+      return note ? `${weight} kg · ${note}` : `${weight} kg`;
+    }
+
+    function calcProgress() {
+      const latestWeightRecord = records.find(r => r.weight !== null && r.weight !== undefined);
+      const currentWeight = latestWeightRecord ? latestWeightRecord.weight : profile.startWeight;
+      const totalToLose = profile.startWeight - profile.targetWeight;
+      const lost = profile.startWeight - currentWeight;
+      const pct = totalToLose <= 0 ? 0 : Math.max(0, Math.min(100, (lost / totalToLose) * 100));
+
+      return {
+        currentWeight,
+        totalToLose,
+        lost,
+        pct
+      };
+    }
+
+    function renderOverview() {
+      const p = calcProgress();
+
+      const statsEl = document.getElementById("goalOverviewStats");
+      statsEl.innerHTML = [
+        { k: "起始体重(kg)", v: profile.startWeight.toFixed(1) },
+        { k: "目标体重(kg)", v: profile.targetWeight.toFixed(1) },
+        { k: "当前体重(kg)", v: p.currentWeight.toFixed(1) }
+      ].map(item => `
+        <div class="stat-item">
+          <div class="v">${item.v}</div>
+          <div class="k">${item.k}</div>
         </div>
-        
-        <!-- 3月14日 -->
-        <div class="day-card">
+      `).join("");
+
+      document.getElementById("progressLabel").textContent = `已完成 ${p.pct.toFixed(0)}%`;
+      document.getElementById("progressFill").style.width = `${p.pct}%`;
+    }
+
+    function renderRecords() {
+      const container = document.getElementById("recordList");
+
+      container.innerHTML = records.map(r => {
+        const mealSections = order
+          .filter(key => Array.isArray(r.meals[key]) && r.meals[key].length > 0)
+          .map(key => {
+            const rows = r.meals[key].map(it => `
+              <div class="item">
+                <span class="name">${it.name}</span>
+                <span class="cal">${it.kcal} kcal</span>
+              </div>
+            `).join("");
+
+            return `
+              <div class="section-title">${key}</div>
+              <div class="list">${rows}</div>
+            `;
+          }).join("");
+
+        const netClass = r.net > profile.dailyNetTarget ? "warn" : "success";
+
+        const exerciseBlock = r.exercise
+          ? `
+            <div class="exercise">
+              <span>${r.exercise.name}</span>
+              <span class="cal">-${r.exercise.kcal} kcal</span>
+            </div>
+          `
+          : "";
+
+        return `
+          <article class="card day-card">
             <div class="day-header">
-                <div>
-                    <div class="day-date">3月14日</div>
-                    <div class="day-week">星期六</div>
-                </div>
-                <div class="day-weight">
-                    <div class="value">68.5</div>
-                    <div class="unit">kg</div>
-                </div>
+              <div>
+                <div class="date">${r.date}</div>
+                <div class="week">${r.week}</div>
+              </div>
+              <div class="weight">
+                <div class="v">${r.weight === null ? "--" : r.weight.toFixed(1)}</div>
+                <div class="u">${weightLabel(r.weight, r.note).replace(/^--\s?kg$/, "kg")}</div>
+              </div>
             </div>
-            <div class="day-content">
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍪</span>零食</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">白色恋人饼干 1片</span>
-                            <span class="calories">57 kcal</span>
-                        </div>
-                    </div>
+            <div class="day-body">
+              ${mealSections || '<div class="section-title">暂无饮食记录</div>'}
+              ${exerciseBlock}
+              <div class="summary-grid">
+                <div class="summary-box">
+                  <div class="v">${formatNumber(r.intake)}</div>
+                  <div class="k">总摄入(kcal)</div>
                 </div>
-                <div class="day-summary">
-                    <div class="summary-item">
-                        <div class="value">57</div>
-                        <div class="label">总摄入(kcal)</div>
-                    </div>
-                    <div class="summary-item success">
-                        <div class="value">57</div>
-                        <div class="label">净摄入(kcal)</div>
-                    </div>
+                <div class="summary-box ${netClass}">
+                  <div class="v">${formatNumber(r.net)}</div>
+                  <div class="k">净摄入(kcal)</div>
                 </div>
+              </div>
             </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    let weightChart = null;
+    let netChart = null;
+
+    function renderTrendStats() {
+      const validWeights = records.filter(r => typeof r.weight === "number").map(r => r.weight);
+      const avgNet = Math.round(records.reduce((sum, r) => sum + r.net, 0) / records.length);
+      const p = calcProgress();
+
+      document.getElementById("trendStats").innerHTML = [
+        { k: "最低体重(kg)", v: validWeights.length ? Math.min(...validWeights).toFixed(1) : "--" },
+        { k: "平均净摄入(kcal)", v: formatNumber(avgNet) },
+        { k: "累计减重(kg)", v: p.lost.toFixed(1) }
+      ].map(item => `
+        <div class="stat-item">
+          <div class="v">${item.v}</div>
+          <div class="k">${item.k}</div>
         </div>
-        
-        <!-- 3月13日 -->
-        <div class="day-card">
-            <div class="day-header">
-                <div>
-                    <div class="day-date">3月13日</div>
-                    <div class="day-week">星期五</div>
-                </div>
-                <div class="day-weight">
-                    <div class="value">68.3</div>
-                    <div class="unit">kg · 早上空腹</div>
-                </div>
-            </div>
-            <div class="day-content">
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍱</span>午餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">赛百味6英寸牛肉三明治</span>
-                            <span class="calories">290 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">油泼面</span>
-                            <span class="calories">650 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">鸡蛋醪糟</span>
-                            <span class="calories">150 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="day-summary">
-                    <div class="summary-item">
-                        <div class="value">1,090</div>
-                        <div class="label">总摄入(kcal)</div>
-                    </div>
-                    <div class="summary-item success">
-                        <div class="value">1,090</div>
-                        <div class="label">净摄入(kcal)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 3月12日 -->
-        <div class="day-card">
-            <div class="day-header">
-                <div>
-                    <div class="day-date">3月12日</div>
-                    <div class="day-week">星期四</div>
-                </div>
-                <div class="day-weight">
-                    <div class="value">70.2</div>
-                    <div class="unit">kg</div>
-                </div>
-            </div>
-            <div class="day-content">
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍱</span>午餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">赛百味6英寸牛肉三明治</span>
-                            <span class="calories">290 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">麦辣鸡翅 2份</span>
-                            <span class="calories">380 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">中薯条 1份</span>
-                            <span class="calories">340 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">中杯可乐</span>
-                            <span class="calories">210 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍪</span>零食</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">白色恋人饼干 1块</span>
-                            <span class="calories">57 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">鹌鹑蛋 5个</span>
-                            <span class="calories">70 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="day-summary">
-                    <div class="summary-item">
-                        <div class="value">1,347</div>
-                        <div class="label">总摄入(kcal)</div>
-                    </div>
-                    <div class="summary-item warning">
-                        <div class="value">1,347</div>
-                        <div class="label">净摄入(kcal)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 3月11日 -->
-        <div class="day-card">
-            <div class="day-header">
-                <div>
-                    <div class="day-date">3月11日</div>
-                    <div class="day-week">星期三</div>
-                </div>
-                <div class="day-weight">
-                    <div class="value">--</div>
-                    <div class="unit">kg</div>
-                </div>
-            </div>
-            <div class="day-content">
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍱</span>午餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">热米皮 1份</span>
-                            <span class="calories">400 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">肉夹馍 1个</span>
-                            <span class="calories">350 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">可乐 150ml</span>
-                            <span class="calories">70 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="meal-section">
-                    <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
-                    <div class="meal-content">
-                        <div class="meal-item">
-                            <span class="name">麦辣鸡翅 2份</span>
-                            <span class="calories">380 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">中薯条 1份</span>
-                            <span class="calories">340 kcal</span>
-                        </div>
-                        <div class="meal-item">
-                            <span class="name">可乐 1/3杯</span>
-                            <span class="calories">70 kcal</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="exercise-section">
-                    <div class="exercise-title"><span class="icon">🚴</span>运动</div>
-                    <div class="exercise-detail">
-                        <span class="exercise-name">室内单车 40分钟</span>
-                        <span class="exercise-calories">-327 kcal</span>
-                    </div>
-                </div>
-                <div class="day-summary">
-                    <div class="summary-item">
-                        <div class="value">1,610</div>
-                        <div class="label">总摄入(kcal)</div>
-                    </div>
-                    <div class="summary-item success">
-                        <div class="value">1,283</div>
-                        <div class="label">净摄入(kcal)</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 趋势页面 -->
-    <div id="page-trend" class="page">
-        <div class="chart-card">
-            <h3>📈 体重趋势</h3>
-            <div class="chart-container">
-                <canvas id="weightChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <h3>🔥 净摄入热量趋势</h3>
-            <div class="chart-container">
-                <canvas id="calorieChart"></canvas>
-            </div>
-        </div>
-        
-        <div class="chart-card">
-            <h3>📊 数据统计</h3>
-            <div class="goal-stats">
-                <div class="goal-stat">
-                    <div class="value">68.3</div>
-                    <div class="label">最低体重(kg)</div>
-                </div>
-                <div class="goal-stat">
-                    <div class="value">944</div>
-                    <div class="label">平均净摄入(kcal)</div>
-                </div>
-                <div class="goal-stat">
-                    <div class="value">-1.7</div>
-                    <div class="label">累计减重(kg)</div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 目标页面 -->
-    <div id="page-goal" class="page">
-        <div class="goal-card">
-            <h2>🎯 我的减肥目标</h2>
-            <div class="goal-stats">
-                <div class="goal-stat">
-                    <div class="value">70.2</div>
-                    <div class="label">起始体重(kg)</div>
-                </div>
-                <div class="goal-stat highlight">
-                    <div class="value">68.0</div>
-                    <div class="label">目标体重(kg)</div>
-                </div>
-                <div class="goal-stat">
-                    <div class="value">68.5</div>
-                    <div class="label">当前体重(kg)</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="progress-section">
-            <div class="progress-header">
-                <h3>减重进度</h3>
-                <div class="progress-value">已完成 82%</div>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" style="width: 82%"></div>
-            </div>
-            <div class="progress-info">
-                <span>已减 1.9kg</span>
-                <span>目标 2.2kg</span>
-            </div>
-        </div>
-        
-        <div class="target-section">
-            <h3>📋 目标达成情况</h3>
-            <div class="target-item">
-                <span class="label">目标净摄入</span>
-                <span class="status good">1500 kcal/天</span>
-            </div>
-            <div class="target-item">
-                <span class="label">今日净摄入</span>
-                <span class="value">57 kcal</span>
-            </div>
-            <div class="target-item">
-                <span class="label">今日状态</span>
-                <span class="status good">优秀 🎉</span>
-            </div>
-            <div class="target-item">
-                <span class="label">BMI指数</span>
-                <span class="value">22.9</span>
-            </div>
-            <div class="target-item">
-                <span class="label">BMI状态</span>
-                <span class="status good">正常范围</span>
-            </div>
-        </div>
-        
-        <div class="milestone-section">
-            <h3>🏅 减肥里程碑</h3>
-            <div class="milestone">
-                <div class="dot completed"></div>
-                <div class="info">
-                    <div class="title">开始减肥</div>
-                    <div class="desc">2026年3月11日 · 70.2kg</div>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="dot completed"></div>
-                <div class="info">
-                    <div class="title">减重1kg</div>
-                    <div class="desc">2026年3月13日 · 68.3kg</div>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="dot current"></div>
-                <div class="info">
-                    <div class="title">减重2kg</title>
-                    <div class="desc">当前进度 82%</div>
-                </div>
-            </div>
-            <div class="milestone">
-                <div class="dot"></div>
-                <div class="info">
-                    <div class="title">达成目标 68kg</div>
-                    <div class="desc">还差 0.5kg</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="advice-card">
-            <h3>💡 今日建议</h3>
-            <p>您的减肥进展很顺利！已减重1.9kg，距离目标仅差0.5kg。继续保持控制饮食，建议每日净摄入控制在1500kcal左右。可以适当增加一些有氧运动，加速达成目标！</p>
-        </div>
-    </div>
-    
-    <!-- 底部导航 -->
-    <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchPage('record')">
-            <div class="icon">📊</div>
-            <div>记录</div>
-        </div>
-        <div class="nav-item" onclick="switchPage('trend')">
-            <div class="icon">📈</div>
-            <div>趋势</div>
-        </div>
-        <div class="nav-item" onclick="switchPage('goal')">
-            <div class="icon">🎯</div>
-            <div>目标</div>
-        </div>
-    </div>
-    
-    <script>
-        // 页面切换
-        function switchPage(page) {
-            // 隐藏所有页面
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            // 显示目标页面
-            document.getElementById('page-' + page).classList.add('active');
-            // 更新导航状态
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            // 如果切换到趋势页面，初始化图表
-            if (page === 'trend') {
-                initCharts();
+      `).join("");
+    }
+
+    function initCharts() {
+      if (typeof Chart === "undefined") {
+        document.getElementById("weightFallback").style.display = "block";
+        document.getElementById("netFallback").style.display = "block";
+        return;
+      }
+
+      if (!weightChart) {
+        const wCtx = document.getElementById("weightChart").getContext("2d");
+        weightChart = new Chart(wCtx, {
+          type: "line",
+          data: {
+            labels: records.slice().reverse().map(r => r.date.replace("日", "")),
+            datasets: [{
+              label: "体重(kg)",
+              data: records.slice().reverse().map(r => r.weight),
+              borderColor: "#4f46e5",
+              backgroundColor: "rgba(79, 70, 229, 0.12)",
+              fill: true,
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 6,
+              tension: 0.35,
+              spanGaps: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                ticks: {
+                  callback: value => `${value} kg`
+                }
+              }
             }
-        }
-        
-        // 初始化图表
-        let chartsInitialized = false;
-        function initCharts() {
-            if (chartsInitialized) return;
-            chartsInitialized = true;
-            
-            // 体重趋势图
-            const weightCtx = document.getElementById('weightChart').getContext('2d');
-            new Chart(weightCtx, {
-                type: 'line',
-                data: {
-                    labels: ['3/11', '3/12', '3/13', '3/14'],
-                    datasets: [{
-                        label: '体重(kg)',
-                        data: [null, 70.2, 68.3, 68.5],
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.3,
-                        pointBackgroundColor: '#667eea',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            min: 67,
-                            max: 71,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ' kg';
-                                }
-                            }
-                        }
-                    }
+          }
+        });
+      }
+
+      if (!netChart) {
+        const nCtx = document.getElementById("netChart").getContext("2d");
+        netChart = new Chart(nCtx, {
+          type: "line",
+          data: {
+            labels: records.slice().reverse().map(r => r.date.replace("日", "")),
+            datasets: [{
+              label: "净摄入(kcal)",
+              data: records.slice().reverse().map(r => r.net),
+              borderColor: "#16a34a",
+              backgroundColor: "rgba(22, 163, 74, 0.12)",
+              fill: true,
+              borderWidth: 3,
+              pointRadius: 5,
+              pointHoverRadius: 6,
+              tension: 0.35
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  callback: value => `${value} kcal`
                 }
-            });
-            
-            // 净摄入热量趋势图
-            const calorieCtx = document.getElementById('calorieChart').getContext('2d');
-            new Chart(calorieCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['3/11', '3/12', '3/13', '3/14'],
-                    datasets: [{
-                        label: '净摄入(kcal)',
-                        data: [1283, 1347, 1090, 57],
-                        backgroundColor: [
-                            'rgba(76, 175, 80, 0.8)',
-                            'rgba(255, 152, 0, 0.8)',
-                            'rgba(76, 175, 80, 0.8)',
-                            'rgba(76, 175, 80, 0.8)'
-                        ],
-                        borderColor: [
-                            '#4caf50',
-                            '#ff9800',
-                            '#4caf50',
-                            '#4caf50'
-                        ],
-                        borderWidth: 2,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + ' kcal';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    </script>
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderGoal() {
+      const p = calcProgress();
+      const leftToGoal = Math.max(0, p.currentWeight - profile.targetWeight).toFixed(1);
+      const today = records[0];
+      const todayStatusClass = today.net <= profile.dailyNetTarget ? "status-good" : "status-warn";
+      const todayStatusText = today.net <= profile.dailyNetTarget ? "达标" : "超标";
+
+      document.getElementById("goalTable").innerHTML = `
+        <tr><td>目标净摄入</td><td>${profile.dailyNetTarget} kcal/天</td></tr>
+        <tr><td>今日净摄入</td><td>${today.net} kcal</td></tr>
+        <tr><td>今日状态</td><td class="${todayStatusClass}">${todayStatusText}</td></tr>
+        <tr><td>BMI指数</td><td>${profile.bmi}</td></tr>
+        <tr><td>距离目标体重</td><td>${leftToGoal} kg</td></tr>
+      `;
+
+      document.getElementById("timeline").innerHTML = `
+        <div class="timeline-item">
+          <span class="dot done"></span>
+          <div>
+            <div class="t1">开始减肥</div>
+            <div class="t2">2026年3月11日 · ${profile.startWeight.toFixed(1)}kg</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="dot done"></span>
+          <div>
+            <div class="t1">减重1kg</div>
+            <div class="t2">2026年3月13日 · 68.3kg</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="dot current"></span>
+          <div>
+            <div class="t1">减重2kg阶段</div>
+            <div class="t2">当前进度 ${p.pct.toFixed(0)}%</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <span class="dot"></span>
+          <div>
+            <div class="t1">达成目标体重</div>
+            <div class="t2">目标 68.0kg</div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("advice").textContent =
+        `你目前已累计减重 ${p.lost.toFixed(1)}kg，完成度 ${p.pct.toFixed(0)}%。建议继续把每日净摄入控制在 ${profile.dailyNetTarget} kcal 左右，并保持稳定作息与规律运动，以更平稳地达到目标。`;
+    }
+
+    function switchPage(page) {
+      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+      document.getElementById(`page-${page}`).classList.add("active");
+
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.page === page);
+      });
+
+      if (page === "trend") {
+        initCharts();
+      }
+    }
+
+    function bindTabs() {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => switchPage(btn.dataset.page));
+      });
+    }
+
+    function bootstrap() {
+      renderOverview();
+      renderRecords();
+      renderTrendStats();
+      renderGoal();
+      bindTabs();
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", bootstrap);
+    } else {
+      bootstrap();
+    }
+  </script>
 </body>
 </html>
