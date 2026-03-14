@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>减肥记录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 16px;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            padding: 20px 0 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* 目标卡片 */
+        .goal-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .goal-card h2 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 16px;
+        }
+        
+        .goal-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            text-align: center;
+        }
+        
+        .goal-stat .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .goal-stat .label {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .goal-stat.highlight .value {
+            color: #667eea;
+        }
+        
+        /* 进度条 */
+        .progress-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .progress-header h3 {
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .progress-header .progress-value {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: #eee;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        /* 日期卡片 */
+        .day-card {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .day-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-date {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .day-week {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .day-weight {
+            text-align: right;
+        }
+        
+        .day-weight .value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .day-weight .unit {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .day-content {
+            padding: 16px 20px;
+        }
+        
+        /* 餐食区块 */
+        .meal-section {
+            margin-bottom: 16px;
+        }
+        
+        .meal-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .meal-title {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .meal-title .icon {
+            width: 16px;
+            text-align: center;
+        }
+        
+        .meal-content {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 12px 16px;
+        }
+        
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .meal-item:last-child {
+            border-bottom: none;
+        }
+        
+        .meal-item .name {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .meal-item .calories {
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        /* 运动区块 */
+        .exercise-section {
+            background: #e8f5e9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 12px;
+        }
+        
+        .exercise-title {
+            font-size: 13px;
+            color: #4caf50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .exercise-detail {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .exercise-name {
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .exercise-calories {
+            font-size: 14px;
+            color: #4caf50;
+            font-weight: 500;
+        }
+        
+        /* 今日汇总 */
+        .day-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        
+        .summary-item .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .summary-item .label {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+        
+        .summary-item.warning .value {
+            color: #ff9800;
+        }
+        
+        .summary-item.success .value {
+            color: #4caf50;
+        }
+        
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-item .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>减肥记录</h1>
+        <div class="subtitle">坚持就是胜利</div>
+    </div>
+    
+    <!-- 目标卡片 -->
+    <div class="goal-card">
+        <h2>我的目标</h2>
+        <div class="goal-stats">
+            <div class="goal-stat">
+                <div class="value">70.2</div>
+                <div class="label">起始体重(kg)</div>
+            </div>
+            <div class="goal-stat highlight">
+                <div class="value">68.0</div>
+                <div class="label">目标体重(kg)</div>
+            </div>
+            <div class="goal-stat">
+                <div class="value">2.2</div>
+                <div class="label">目标减重(kg)</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 进度条 -->
+    <div class="progress-section">
+        <div class="progress-header">
+            <h3>减重进度</h3>
+            <div class="progress-value">已完成 82%</div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 82%"></div>
+        </div>
+        <div class="progress-info">
+            <span>已减 1.9kg</span>
+            <span>目标 2.2kg</span>
+        </div>
+    </div>
+    
+    <!-- 3月14日 -->
+    <div class="day-card">
+        <div class="day-header">
+            <div>
+                <div class="day-date">3月14日</div>
+                <div class="day-week">星期六</div>
+            </div>
+            <div class="day-weight">
+                <div class="value">68.5</div>
+                <div class="unit">kg</div>
+            </div>
+        </div>
+        <div class="day-content">
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍪</span>零食</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">白色恋人饼干 1片</span>
+                        <span class="calories">57 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="day-summary">
+                <div class="summary-item">
+                    <div class="value">57</div>
+                    <div class="label">总摄入(kcal)</div>
+                </div>
+                <div class="summary-item success">
+                    <div class="value">57</div>
+                    <div class="label">净摄入(kcal)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3月13日 -->
+    <div class="day-card">
+        <div class="day-header">
+            <div>
+                <div class="day-date">3月13日</div>
+                <div class="day-week">星期五</div>
+            </div>
+            <div class="day-weight">
+                <div class="value">68.3</div>
+                <div class="unit">kg · 早上空腹</div>
+            </div>
+        </div>
+        <div class="day-content">
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍱</span>午餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">赛百味6英寸牛肉三明治</span>
+                        <span class="calories">290 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">油泼面</span>
+                        <span class="calories">650 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">鸡蛋醪糟</span>
+                        <span class="calories">150 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="day-summary">
+                <div class="summary-item">
+                    <div class="value">1,090</div>
+                    <div class="label">总摄入(kcal)</div>
+                </div>
+                <div class="summary-item success">
+                    <div class="value">1,090</div>
+                    <div class="label">净摄入(kcal)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3月12日 -->
+    <div class="day-card">
+        <div class="day-header">
+            <div>
+                <div class="day-date">3月12日</div>
+                <div class="day-week">星期四</div>
+            </div>
+            <div class="day-weight">
+                <div class="value">70.2</div>
+                <div class="unit">kg</div>
+            </div>
+        </div>
+        <div class="day-content">
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍱</span>午餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">赛百味6英寸牛肉三明治</span>
+                        <span class="calories">290 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">麦辣鸡翅 2份</span>
+                        <span class="calories">380 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">中薯条 1份</span>
+                        <span class="calories">340 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">中杯可乐</span>
+                        <span class="calories">210 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍪</span>零食</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">白色恋人饼干 1块</span>
+                        <span class="calories">57 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">鹌鹑蛋 5个</span>
+                        <span class="calories">70 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="day-summary">
+                <div class="summary-item">
+                    <div class="value">1,347</div>
+                    <div class="label">总摄入(kcal)</div>
+                </div>
+                <div class="summary-item warning">
+                    <div class="value">1,347</div>
+                    <div class="label">净摄入(kcal)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 3月11日 -->
+    <div class="day-card">
+        <div class="day-header">
+            <div>
+                <div class="day-date">3月11日</div>
+                <div class="day-week">星期三</div>
+            </div>
+            <div class="day-weight">
+                <div class="value">--</div>
+                <div class="unit">kg</div>
+            </div>
+        </div>
+        <div class="day-content">
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍱</span>午餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">热米皮 1份</span>
+                        <span class="calories">400 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">肉夹馍 1个</span>
+                        <span class="calories">350 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">可乐 150ml</span>
+                        <span class="calories">70 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="meal-section">
+                <div class="meal-title"><span class="icon">🍲</span>晚餐</div>
+                <div class="meal-content">
+                    <div class="meal-item">
+                        <span class="name">麦辣鸡翅 2份</span>
+                        <span class="calories">380 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">中薯条 1份</span>
+                        <span class="calories">340 kcal</span>
+                    </div>
+                    <div class="meal-item">
+                        <span class="name">可乐 1/3杯</span>
+                        <span class="calories">70 kcal</span>
+                    </div>
+                </div>
+            </div>
+            <div class="exercise-section">
+                <div class="exercise-title"><span class="icon">🚴</span>运动</div>
+                <div class="exercise-detail">
+                    <span class="exercise-name">室内单车 40分钟</span>
+                    <span class="exercise-calories">-327 kcal</span>
+                </div>
+            </div>
+            <div class="day-summary">
+                <div class="summary-item">
+                    <div class="value">1,610</div>
+                    <div class="label">总摄入(kcal)</div>
+                </div>
+                <div class="summary-item success">
+                    <div class="value">1,283</div>
+                    <div class="label">净摄入(kcal)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <div class="icon">📊</div>
+            <div>记录</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">📈</div>
+            <div>趋势</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">🎯</div>
+            <div>目标</div>
+        </div>
+        <div class="nav-item">
+            <div class="icon">👤</div>
+            <div>我的</div>
+        </div>
+    </div>
+</body>
+</html>
