@@ -772,13 +772,21 @@
 
       if (!netChart) {
         const nCtx = document.getElementById("netChart").getContext("2d");
+        // 仅显示“午餐+晚餐都已记录”的天数，避免不完整饮食数据干扰趋势线
+        const validNetRecords = records.filter(r => {
+          const lunch = r.meals?.["午餐"];
+          const dinner = r.meals?.["晚餐"];
+          const hasLunch = Array.isArray(lunch) && lunch.length > 0;
+          const hasDinner = Array.isArray(dinner) && dinner.length > 0;
+          return hasLunch && hasDinner;
+        }).reverse();
         netChart = new Chart(nCtx, {
           type: "line",
           data: {
-            labels: records.slice().reverse().map(r => r.date.replace("日", "")),
+            labels: validNetRecords.map(r => r.date.replace("日", "")),
             datasets: [{
               label: "净摄入(kcal)",
-              data: records.slice().reverse().map(r => r.net),
+              data: validNetRecords.map(r => r.net),
               borderColor: "#16a34a",
               backgroundColor: "rgba(22, 163, 74, 0.12)",
               fill: true,
